@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Cart — VoltCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="cart-page">
+  <div class="section-head" style="padding-left:0; padding-right:0;">
+    <h2>Your cart</h2>
+  </div>
+  <div id="cartContent"></div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/components.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  renderHeader("cart");
+
+  function render() {
+    const items = getCartDetailed();
+    const content = document.getElementById("cartContent");
+
+    if (items.length === 0) {
+      content.innerHTML = `
+        <div class="empty-state">
+          <h2>Your cart is empty</h2>
+          <p>Nothing here yet — go find something worth adding.</p>
+          <a href="shop.html" class="btn btn--primary">Browse products</a>
+        </div>
+      `;
+      return;
+    }
+
+    const total = getCartTotal();
+    const shipping = total >= 2000 ? 0 : 99;
+    const grandTotal = total + shipping;
+
+    content.innerHTML = `
+      <div class="cart-layout">
+        <div class="cart-items">
+          ${items.map(item => `
+            <div class="cart-item">
+              <div class="cart-item__img"><img src="${item.image}" alt="${item.name}"></div>
+              <div>
+                <div class="cart-item__name">${item.name}</div>
+                <div class="cart-item__unit">${formatPrice(item.price)} each</div>
+                <div class="cart-item__row">
+                  <div class="qty-selector">
+                    <button onclick="changeQty(${item.id}, ${item.qty - 1})" aria-label="Decrease quantity">−</button>
+                    <span>${item.qty}</span>
+                    <button onclick="changeQty(${item.id}, ${item.qty + 1})" aria-label="Increase quantity">+</button>
+                  </div>
+                  <span class="cart-item__total">${formatPrice(item.lineTotal)}</span>
+                </div>
+                <button class="cart-item__remove" onclick="removeItem(${item.id})">Remove</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+
+        <aside class="cart-summary">
+          <div class="cart-summary__row"><span>Subtotal</span><span>${formatPrice(total)}</span></div>
+          <div class="cart-summary__row"><span>Shipping</span><span>${shipping === 0 ? "Free" : formatPrice(shipping)}</span></div>
+          <div class="cart-summary__row cart-summary__row--total"><span>Total</span><span>${formatPrice(grandTotal)}</span></div>
+          <a href="checkout.html" class="btn btn--primary btn--block">Proceed to checkout</a>
+        </aside>
+      </div>
+    `;
+  }
+
+  function changeQty(id, qty) {
+    updateQty(id, qty);
+    render();
+  }
+
+  function removeItem(id) {
+    removeFromCart(id);
+    render();
+  }
+
+  render();
+</script>
+</body>
+</html>

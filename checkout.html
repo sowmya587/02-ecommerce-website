@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — VoltCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="checkout-page">
+  <div class="section-head" style="padding-left:0; padding-right:0;">
+    <h2>Checkout</h2>
+  </div>
+  <div id="checkoutContent"></div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/components.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  renderHeader("cart");
+
+  const content = document.getElementById("checkoutContent");
+
+  function render() {
+    const items = getCartDetailed();
+
+    // Empty cart — nothing to check out
+    if (items.length === 0) {
+      content.innerHTML = `
+        <div class="empty-state">
+          <h2>Your cart is empty</h2>
+          <p>Add something before heading to checkout.</p>
+          <a href="shop.html" class="btn btn--primary">Browse products</a>
+        </div>
+      `;
+      return;
+    }
+
+    // Clerk hasn't loaded yet, or key isn't configured — wait/inform
+    if (!window.Clerk) {
+      content.innerHTML = `
+        <div class="checkout-gate">
+          <h2>Loading sign-in…</h2>
+          <p>If this doesn't finish loading, check that a Clerk publishable key is set in <code>js/auth.js</code>.</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Not signed in — gate checkout behind Google sign-in
+    if (!isSignedIn()) {
+      content.innerHTML = `
+        <div class="checkout-gate">
+          <h2>Sign in to check out</h2>
+          <p>VoltCart uses Google sign-in to keep your order tied to your account. Sign in to continue — your cart will be waiting.</p>
+          <button class="btn btn--primary" id="gateSignIn">Sign in with Google</button>
+        </div>
+      `;
+      document.getElementById("gateSignIn").addEventListener("click", () => {
+        window.Clerk.openSignIn({});
+      });
+      return;
+    }
+
+    // Signed in — show order summary + confirm
+    const total = getCartTotal();
+    const shipping = total >= 2000 ? 0 : 99;
+    const grandTotal = total + shipping;
+    const user = window.Clerk.user;
+    const name = user.fullName || user.primaryEmailAddress?.emailAddress || "there";
+
+    content.innerHTML = `
+      <p style="color:var(--muted); margin-bottom:1rem;">Signed in as <strong style="color:var(--text);">${name}</strong></p>
+      <div class="order-summary">
+        ${items.map(item => `
+          <div class="order-summary__item">
+            <span>${item.name} × ${item.qty}</span>
+            <span>${formatPrice(item.lineTotal)}</span>
+          </div>
+        `).join("")}
+        <div class="order-summary__item"><span>Shipping</span><span>${shipping === 0 ? "Free" : formatPrice(shipping)}</span></div>
+        <div class="order-summary__item" style="font-weight:700; color:var(--text);"><span>Total</span><span>${formatPrice(grandTotal)}</span></div>
+      </div>
+      <button class="btn btn--primary btn--block" id="placeOrderBtn">Place order</button>
+    `;
+
+    document.getElementById("placeOrderBtn").addEventListener("click", () => {
+      clearCart();
+      content.innerHTML = `
+        <div class="checkout-success">
+          <div class="icon">✅</div>
+          <h2>Order placed</h2>
+          <p>Thanks, ${name.split(" ")[0]} — this is a demo checkout, so no real order was sent, but your cart has been cleared.</p>
+          <a href="shop.html" class="btn btn--primary">Continue shopping</a>
+        </div>
+      `;
+    });
+  }
+
+  // Re-render whenever Clerk's auth state changes (sign in / sign out)
+  document.addEventListener("clerk-ready", render);
+  document.addEventListener("clerk-change", render);
+  render();
+</script>
+</body>
+</html>
