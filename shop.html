@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop — VoltCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main>
+  <div class="section-head">
+    <h2>All products</h2>
+    <span id="resultCount" style="color:var(--muted); font-size:0.85rem;"></span>
+  </div>
+  <div class="category-strip" id="categoryStrip"></div>
+  <div class="product-grid" id="productGrid"></div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/components.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  renderHeader("shop");
+
+  const params = new URLSearchParams(window.location.search);
+  let activeCategory = params.get("category") || "All";
+
+  const categories = ["All", ...new Set(PRODUCTS.map(p => p.category))];
+
+  function renderChips() {
+    document.getElementById("categoryStrip").innerHTML = categories.map(c => `
+      <button class="category-chip" data-cat="${c}"
+        style="${c === activeCategory ? "background:var(--primary); color:#fff; border-color:var(--primary);" : ""}">
+        ${c}
+      </button>
+    `).join("");
+
+    document.querySelectorAll("[data-cat]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeCategory = btn.dataset.cat;
+        renderChips();
+        renderGrid();
+      });
+    });
+  }
+
+  function renderGrid() {
+    const list = activeCategory === "All"
+      ? PRODUCTS
+      : PRODUCTS.filter(p => p.category === activeCategory);
+
+    document.getElementById("resultCount").textContent = `${list.length} item${list.length !== 1 ? "s" : ""}`;
+    document.getElementById("productGrid").innerHTML = list.map(productCardHTML).join("");
+  }
+
+  function productCardHTML(p) {
+    return `
+      <article class="product-card">
+        <a href="product.html?id=${p.id}" class="product-card__img">
+          <img src="${p.image}" alt="${p.name}" loading="lazy">
+        </a>
+        <div class="product-card__body">
+          <span class="product-card__cat">${p.category}</span>
+          <a href="product.html?id=${p.id}" class="product-card__name">${p.name}</a>
+          <span class="product-card__rating">★ ${p.rating}</span>
+          <div class="product-card__price-row">
+            <span class="product-card__price">${formatPrice(p.price)}</span>
+            ${p.oldPrice ? `<span class="product-card__old-price">${formatPrice(p.oldPrice)}</span>` : ""}
+          </div>
+          <div class="product-card__cta">
+            <button class="btn btn--ghost btn--small btn--block" onclick="addToCart(${p.id}); this.textContent='Added ✓';">Add to cart</button>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  renderChips();
+  renderGrid();
+</script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoltCart — Gear for your desk</title>
+<meta name="description" content="VoltCart — a small store for desk gear, audio and accessories.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main>
+  <section class="hero">
+    <div class="hero__text">
+      <p class="eyebrow">New season</p>
+      <h1 class="hero__title">Gear that earns a spot on your desk.</h1>
+      <p class="hero__sub">Twelve pieces, picked for people who spend their day at a keyboard — audio, peripherals and the small stuff that actually gets used.</p>
+      <a href="shop.html" class="btn btn--primary">Shop all products</a>
+    </div>
+    <div class="hero__img">
+      <img src="https://picsum.photos/seed/volt-hero/900/600" alt="Desk setup with keyboard, headphones and a lamp">
+    </div>
+  </section>
+
+  <div class="category-strip" id="categoryStrip"></div>
+
+  <div class="section-head">
+    <h2>Featured picks</h2>
+    <a href="shop.html" class="btn btn--ghost btn--small">View all</a>
+  </div>
+  <div class="product-grid" id="featuredGrid"></div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/components.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  renderHeader("home");
+
+  // Category chips (informational — full filtering lives on shop.html)
+  const categories = [...new Set(PRODUCTS.map(p => p.category))];
+  document.getElementById("categoryStrip").innerHTML = categories
+    .map(c => `<a href="shop.html?category=${encodeURIComponent(c)}" class="category-chip">${c}</a>`)
+    .join("");
+
+  // Feature the first 4 products
+  const featured = PRODUCTS.slice(0, 4);
+  document.getElementById("featuredGrid").innerHTML = featured.map(productCardHTML).join("");
+
+  function productCardHTML(p) {
+    return `
+      <article class="product-card">
+        <a href="product.html?id=${p.id}" class="product-card__img">
+          <img src="${p.image}" alt="${p.name}" loading="lazy">
+        </a>
+        <div class="product-card__body">
+          <span class="product-card__cat">${p.category}</span>
+          <a href="product.html?id=${p.id}" class="product-card__name">${p.name}</a>
+          <span class="product-card__rating">★ ${p.rating}</span>
+          <div class="product-card__price-row">
+            <span class="product-card__price">${formatPrice(p.price)}</span>
+            ${p.oldPrice ? `<span class="product-card__old-price">${formatPrice(p.oldPrice)}</span>` : ""}
+          </div>
+          <div class="product-card__cta">
+            <button class="btn btn--ghost btn--small btn--block" onclick="addToCart(${p.id}); this.textContent='Added ✓';">Add to cart</button>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+</script>
+</body>
+</html>

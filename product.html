@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product — VoltCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main id="productMain">
+  <!-- filled by JS -->
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/components.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  renderHeader("shop");
+
+  const id = new URLSearchParams(window.location.search).get("id");
+  const product = getProductById(id);
+  const main = document.getElementById("productMain");
+
+  if (!product) {
+    main.innerHTML = `
+      <div class="empty-state">
+        <h2>Product not found</h2>
+        <p>That item doesn't exist — it may have been removed.</p>
+        <a href="shop.html" class="btn btn--primary">Back to shop</a>
+      </div>
+    `;
+  } else {
+    document.title = `${product.name} — VoltCart`;
+    let qty = 1;
+
+    main.innerHTML = `
+      <div class="product-detail">
+        <div class="product-detail__img">
+          <img src="${product.image}" alt="${product.name}">
+        </div>
+        <div class="product-detail__info">
+          <p class="product-detail__cat">${product.category}</p>
+          <h1 class="product-detail__name">${product.name}</h1>
+          <div class="product-detail__price-row">
+            <span class="product-detail__price">${formatPrice(product.price)}</span>
+            ${product.oldPrice ? `<span class="product-detail__old-price">${formatPrice(product.oldPrice)}</span>` : ""}
+          </div>
+          <p class="product-detail__desc">${product.description}</p>
+
+          <div class="qty-selector">
+            <button id="qtyMinus" aria-label="Decrease quantity">−</button>
+            <span id="qtyValue">1</span>
+            <button id="qtyPlus" aria-label="Increase quantity">+</button>
+          </div>
+
+          <div>
+            <button id="addBtn" class="btn btn--primary">Add to cart</button>
+            <a href="cart.html" class="btn btn--ghost">View cart</a>
+          </div>
+          <p class="add-confirm" id="addConfirm">Added to cart ✓ — <a href="cart.html" style="text-decoration:underline;">view cart</a></p>
+        </div>
+      </div>
+    `;
+
+    const qtyValueEl = document.getElementById("qtyValue");
+    document.getElementById("qtyMinus").addEventListener("click", () => {
+      qty = Math.max(1, qty - 1);
+      qtyValueEl.textContent = qty;
+    });
+    document.getElementById("qtyPlus").addEventListener("click", () => {
+      qty += 1;
+      qtyValueEl.textContent = qty;
+    });
+    document.getElementById("addBtn").addEventListener("click", () => {
+      addToCart(product.id, qty);
+      document.getElementById("addConfirm").classList.add("is-shown");
+    });
+  }
+</script>
+</body>
+</html>
